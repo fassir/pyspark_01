@@ -1,0 +1,16 @@
+==================================================
+DIAGNOSTIC REPORT
+==================================================
+
+--- BRONZE LAYER ---
+Bronze Count: 665
+Schema: struct<data:array<struct<changePercent24Hr:string,id:string,marketCapUsd:string,name:string,priceUsd:string,symbol:string,volumeUsd24Hr:string>>,timestamp:bigint,ingestion_time:timestamp,source_file:string>
+
+--- SILVER LAYER ---
+Silver Count: 6650
+Distinct Symbols in Silver: ['STETH', 'ETH', 'DOGE', 'USDC', 'BTC', 'USDT', 'XRP', 'SOL', 'TRX', 'BNB']
+
+--- GOLD LAYER ---
+Gold Count: 20
+Distinct Symbols in Gold: ['BTC']
+==================================================

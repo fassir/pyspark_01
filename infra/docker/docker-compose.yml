@@ -1,0 +1,118 @@
+services:
+
+  # --- Data Ingestion ---
+  ingestion:
+    build:
+      context: ../../ingestion
+    container_name: crypto_ingestion
+    volumes:
+      - ../../data:/app/data
+    environment:
+      - DATA_PATH=/app/data/landing
+    networks:
+      - lakehouse-net
+    dns:
+      - 8.8.8.8
+    # extra_hosts:
+    #   - "api.coincap.io:104.18.26.209"
+    # network_mode: host
+
+
+    # Run periodically or as a daemon? For now, run once and sleep (simulating cron)
+    command: python -u extract_crypto.py
+
+  # --- PySpark Cluster ---
+
+  # --- PySpark Cluster ---
+  spark-master:
+    image: apache/spark:3.5.0
+    container_name: spark-master
+    user: root
+    environment:
+      - SPARK_MASTER_HOST=spark-master
+    ports:
+      - '8090:8080'
+      - '7077:7077'
+    command: "/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master"
+    volumes:
+      - ../../data:/app/data
+      - ../../processing:/app/processing
+      - ../../serving:/app/serving
+    networks:
+      - lakehouse-net
+
+  spark-worker:
+    image: apache/spark:3.5.0
+    container_name: spark-worker
+    user: root
+    environment:
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=1G
+    command: "/opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077"
+
+    volumes:
+      - ../../data:/app/data
+      - ../../processing:/app/processing
+    networks:
+      - lakehouse-net
+    depends_on:
+      - spark-master
+
+  # --- Database & Serving ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: lakehouse_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cryptodb
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - lakehouse-net
+
+  # --- Visualization ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lakehouse_grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../../dashboards/provisioning:/etc/grafana/provisioning
+      - ../../dashboards:/var/lib/grafana/dashboards
+    networks:
+      - lakehouse-net
+
+    depends_on:
+      - postgres
+
+  # --- Orchestration ---
+  orchestrator:
+    build:
+      context: ../../orchestration
+    container_name: lakehouse_orchestrator
+    environment:
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    volumes:
+      - ../../data:/app/data
+      - ../../processing:/app/processing
+      - ../../serving:/app/serving
+    networks:
+      - lakehouse-net
+    depends_on:
+      - spark-master
+      - postgres
+
+networks:
+  lakehouse-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  grafana_data:

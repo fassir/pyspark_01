@@ -1,0 +1,20 @@
+apiVersion: 1
+
+deleteDatasources: []
+
+datasources:
+  - name: CryptoDB
+    type: postgres
+    uid: crypto_pg_01
+    url: postgres:5432
+    user: admin
+    database: cryptodb
+    jsonData:
+      database: "cryptodb"
+      sslmode: "disable"
+      postgresVersion: 1500
+    secureJsonData:
+      password: "password"
+    isDefault: true
+    version: 1
+    editable: true

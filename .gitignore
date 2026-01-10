@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Spark / Java
+*.class
+*.jar
+
+# Project Data (Local Data Lake)
+# We ignore the data volume to keep the repo clean and simulate empty state for new users
+data/landing/*
+data/bronze/*
+data/silver/*
+data/gold/*
+!data/landing/.gitkeep
+!data/bronze/.gitkeep
+!data/silver/.gitkeep
+!data/gold/.gitkeep
+
+# Docker / Infra
+infra/docker/logs/
+*.log
+*.pid
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Terraform (Future Proofing)
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# PySpark Warehouse (Local)
+spark-warehouse/
+metastore_db/
+derby.log
