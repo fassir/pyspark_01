@@ -13,332 +13,786 @@
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
+  "id": 1,
   "links": [],
   "panels": [
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 10,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
       "panels": [],
       "title": "Market Overview",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "crypto_pg_01"
-      },
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": { "type": "color-text" },
+            "footer": { "reducers": [] },
             "inspect": false
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "change_percent_24hr" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "green", "value": 0 }
+                  ]
+                }
+              },
+              { "id": "unit", "value": "percent" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "price_usd" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "market_cap_usd" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "volume_usd_24hr" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 1 },
+      "id": 2,
+      "options": { "cellHeight": "sm", "showHeader": true },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, name, price_usd, market_cap_usd, volume_usd_24hr, change_percent_24hr FROM crypto_top_assets WHERE symbol IN ($symbol) ORDER BY market_cap_usd DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Assets — Current Snapshot ($symbol)",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'Total Market Cap' AS metric, SUM(market_cap_usd) AS value FROM crypto_top_assets",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Market Cap",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": 0 }] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 5 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'Total 24h Volume' AS metric, SUM(volume_usd_24hr) AS value FROM crypto_top_assets",
+          "refId": "A"
+        }
+      ],
+      "title": "Total 24h Volume",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 5,
+      "panels": [],
+      "title": "Price & Moving Averages ($symbol)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Price (USD)",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "ma_7" },
+            "properties": [
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [5, 5], "fill": "dash" } },
+              { "id": "displayName", "value": "MA 7" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ma_14" },
+            "properties": [
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.lineStyle", "value": { "dash": [10, 5], "fill": "dash" } },
+              { "id": "displayName", "value": "MA 14" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "price_usd" },
+            "properties": [
+              { "id": "custom.lineWidth", "value": 2 },
+              { "id": "displayName", "value": "Price" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 10 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["last", "max", "min"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ingestion_time AS \"time\", price_usd, ma_7, ma_14 FROM crypto_moving_averages WHERE symbol IN ($symbol) AND $__timeFilter(ingestion_time) ORDER BY ingestion_time",
+          "refId": "A"
+        }
+      ],
+      "title": "Price + MA7 / MA14 — $symbol",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 7,
+      "panels": [],
+      "title": "Volatility Ranking ($symbol)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisLabel": "Volatility %",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "lineWidth": 1
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 15 }
             ]
-          }
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 1
-      },
-      "id": 2,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "id": 8,
       "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true
+        "barRadius": 0.05,
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "vertical",
+        "showValue": "always",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": -30
       },
-      "pluginVersion": "9.5.1",
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "crypto_pg_01"
-          },
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
           "format": "table",
-          "group": [],
-          "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT symbol, price_usd, market_cap_usd, volume_usd_24hr, change_percent_24hr FROM crypto_top_assets ORDER BY market_cap_usd DESC LIMIT 10",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "symbol"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "crypto_top_assets",
-          "timeColumn": "ingestion_time",
-          "timeColumnType": "timestamp",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "rawSql": "SELECT symbol, volatility_pct, price_range_pct FROM crypto_volatility WHERE symbol IN ($symbol) ORDER BY volatility_pct DESC",
+          "refId": "A"
         }
       ],
-      "title": "Top 10 Assets (Current)",
+      "title": "Volatility — $symbol",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "volatility_pct" },
+            "properties": [{ "id": "unit", "value": "percent" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "price_range_pct" },
+            "properties": [{ "id": "unit", "value": "percent" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "avg_price" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "price_stddev" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+      "id": 9,
+      "options": { "cellHeight": "sm", "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, volatility_pct, price_range_pct, avg_price, price_stddev FROM crypto_volatility WHERE symbol IN ($symbol) ORDER BY volatility_pct DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Full Volatility Stats — $symbol",
       "type": "table"
     },
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 9
-      },
-      "id": 12,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 10,
       "panels": [],
-      "title": "Asset Analysis ($symbol)",
+      "title": "Market Dominance ($symbol)",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "crypto_pg_01"
-      },
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "mappings": [],
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 32 },
+      "id": 11,
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/.*/" , "values": true },
+        "sort": "desc",
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, market_dominance_pct FROM crypto_market_dominance WHERE symbol IN ($symbol) ORDER BY market_dominance_pct DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Market Dominance % — $symbol",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "market_dominance_pct" },
+            "properties": [{ "id": "unit", "value": "percent" }]
           },
+          {
+            "matcher": { "id": "byName", "options": "market_cap_usd" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 32 },
+      "id": 12,
+      "options": { "cellHeight": "sm", "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, name, market_cap_usd, market_dominance_pct FROM crypto_market_dominance WHERE symbol IN ($symbol) ORDER BY market_dominance_pct DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Market Dominance — Detail",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 },
+      "id": 13,
+      "panels": [],
+      "title": "Liquidity Analysis ($symbol)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
           "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
+            "axisBorderShow": false,
+            "axisLabel": "Liquidity Ratio (Volume / Market Cap)",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 80,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "lineWidth": 1
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 0.03 },
+              { "color": "green", "value": 0.1 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 43 },
+      "id": 14,
+      "options": {
+        "barRadius": 0.05,
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "vertical",
+        "showValue": "always",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": -30
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, liquidity_ratio FROM crypto_liquidity WHERE symbol IN ($symbol) ORDER BY liquidity_ratio DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Liquidity Ratio — $symbol",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "liquidity_ratio" },
+            "properties": [{ "id": "unit", "value": "percentunit" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "volume_usd_24hr" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "market_cap_usd" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 43 },
+      "id": 15,
+      "options": { "cellHeight": "sm", "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, name, volume_usd_24hr, market_cap_usd, liquidity_ratio FROM crypto_liquidity WHERE symbol IN ($symbol) ORDER BY liquidity_ratio DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Liquidity Detail — $symbol",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 51 },
+      "id": 16,
+      "panels": [],
+      "title": "Anomaly Feed — Z-Score Detection ($symbol)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "color-text" }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "z_score" },
+            "properties": [
               {
-                "color": "green",
-                "value": null
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green" },
+                    { "color": "yellow", "value": 1.5 },
+                    { "color": "red", "value": 2 }
+                  ]
+                }
               },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "price_usd" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "global_avg" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "is_anomaly" },
+            "properties": [
               {
-                "color": "red",
-                "value": 80
-              }
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "false": { "color": "green", "index": 1, "text": "normal" },
+                      "true": { "color": "red", "index": 0, "text": "ANOMALY" }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 52 },
+      "id": 17,
+      "options": { "footer": { "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ingestion_time, symbol, price_usd, ROUND(AVG(price_usd) OVER (PARTITION BY symbol)::numeric, 2) AS global_avg, ROUND(((price_usd - AVG(price_usd) OVER (PARTITION BY symbol)) / NULLIF(STDDEV(price_usd) OVER (PARTITION BY symbol), 0))::numeric, 3) AS z_score, ABS((price_usd - AVG(price_usd) OVER (PARTITION BY symbol)) / NULLIF(STDDEV(price_usd) OVER (PARTITION BY symbol), 0)) > 2 AS is_anomaly FROM crypto_price_history WHERE symbol IN ($symbol) ORDER BY ABS((price_usd - AVG(price_usd) OVER (PARTITION BY symbol)) / NULLIF(STDDEV(price_usd) OVER (PARTITION BY symbol), 0)) DESC NULLS LAST LIMIT 50",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Anomaly Events — $symbol",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Z-Score",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "always",
+            "spanNulls": false,
+            "thresholdsStyle": { "mode": "line+area" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "transparent" },
+              { "color": "red", "value": 2 }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 12,
-        "w": 16,
-        "x": 0,
-        "y": 10
-      },
-      "id": 4,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 62 },
+      "id": 18,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "mode": "candles",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
       },
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "crypto_pg_01"
-          },
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
           "format": "time_series",
-          "group": [],
-          "metricColumn": "symbol",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroup(ingestion_time, '15m') as \"time\", \n  symbol,\n  min(price_usd) as \"low\", \n  max(price_usd) as \"high\", \n  (array_agg(price_usd ORDER BY ingestion_time ASC))[1] as \"open\", \n  (array_agg(price_usd ORDER BY ingestion_time DESC))[1] as \"close\" \nFROM crypto_price_history \nWHERE symbol IN ($symbol) AND $__timeFilter(ingestion_time) \nGROUP BY 1, 2 \nORDER BY 1, 2",
-          "refId": "A",
-          "table": "crypto_price_history",
-          "timeColumn": "ingestion_time",
-          "timeColumnType": "timestamp"
+          "rawSql": "SELECT ingestion_time AS \"time\", symbol, ROUND(((price_usd - AVG(price_usd) OVER (PARTITION BY symbol)) / NULLIF(STDDEV(price_usd) OVER (PARTITION BY symbol), 0))::numeric, 3) AS z_score FROM crypto_price_history WHERE symbol IN ($symbol) AND $__timeFilter(ingestion_time) ORDER BY ingestion_time",
+          "refId": "A"
         }
       ],
-      "title": "Price History (Candles - 15m)",
+      "title": "Z-Score Over Time — $symbol (threshold = 2.0)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 70 },
+      "id": 19,
+      "panels": [],
+      "title": "Price History & Candlestick ($symbol)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green" }, { "color": "red", "value": 80 }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 12, "w": 16, "x": 0, "y": 71 },
+      "id": 20,
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "mode": "candles",
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "time_series",
+          "metricColumn": "symbol",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroup(ingestion_time, '15m') AS \"time\", symbol, min(price_usd) AS \"low\", max(price_usd) AS \"high\", (array_agg(price_usd ORDER BY ingestion_time ASC))[1] AS \"open\", (array_agg(price_usd ORDER BY ingestion_time DESC))[1] AS \"close\" FROM crypto_price_history WHERE symbol IN ($symbol) AND $__timeFilter(ingestion_time) GROUP BY 1, 2 ORDER BY 1, 2",
+          "refId": "A"
+        }
+      ],
+      "title": "Price History — Candles (15m) — $symbol",
       "type": "candlestick"
     },
     {
-      "datasource": {
-        "type": "postgres",
-        "uid": "crypto_pg_01"
-      },
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Volume (USD 24h)",
             "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "bars",
             "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": [{ "color": "green" }, { "color": "red", "value": 80 }]
           }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 12,
-        "w": 8,
-        "x": 16,
-        "y": 10
-      },
-      "id": 6,
+      "gridPos": { "h": 12, "w": 8, "x": 16, "y": 71 },
+      "id": 21,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
       },
       "targets": [
         {
-          "datasource": {
-            "type": "postgres",
-            "uid": "crypto_pg_01"
-          },
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
           "format": "time_series",
-          "group": [],
           "metricColumn": "symbol",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroup(ingestion_time, '15m') as \"time\", \n  symbol,\n  avg(volume_usd_24hr) as \"volume\" \nFROM crypto_price_history \nWHERE symbol IN ($symbol) AND $__timeFilter(ingestion_time) \nGROUP BY 1, 2 \nORDER BY 1, 2",
-          "refId": "A",
-          "table": "crypto_price_history",
-          "timeColumn": "ingestion_time",
-          "timeColumnType": "timestamp"
+          "rawSql": "SELECT $__timeGroup(ingestion_time, '15m') AS \"time\", symbol, avg(volume_usd_24hr) AS \"volume\" FROM crypto_price_history WHERE symbol IN ($symbol) AND $__timeFilter(ingestion_time) GROUP BY 1, 2 ORDER BY 1, 2",
+          "refId": "A"
         }
       ],
-      "title": "Trading Volume (24Hr)",
+      "title": "Trading Volume (24h) — $symbol",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 83 },
+      "id": 22,
+      "panels": [],
+      "title": "History Stats ($symbol)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "avg_price" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "max_price" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "min_price" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 84 },
+      "id": 23,
+      "options": { "footer": { "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT symbol, avg_price, max_price, min_price FROM crypto_history_stats WHERE symbol IN ($symbol) ORDER BY avg_price DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "History Stats — Avg / Max / Min Price — $symbol",
+      "type": "table"
     }
   ],
-  "refresh": "10s",
-  "schemaVersion": 36,
-  "style": "dark",
-  "tags": [],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": ["crypto", "lakehouse", "pyspark"],
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "postgres",
-          "uid": "crypto_pg_01"
-        },
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": { "type": "postgres", "uid": "crypto_pg_01" },
         "definition": "SELECT DISTINCT symbol FROM crypto_top_assets ORDER BY 1",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "symbol",
@@ -346,18 +800,14 @@
         "query": "SELECT DISTINCT symbol FROM crypto_top_assets ORDER BY 1",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       }
     ]
   },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "title": "Crypto Market Pulse (Advanced)",
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Crypto Market Lakehouse",
   "uid": "crypto_pulse_01",
-  "version": 2,
-  "weekStart": ""
+  "version": 6
 }

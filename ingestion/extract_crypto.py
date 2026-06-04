@@ -34,6 +34,7 @@ def fetch_data():
             for item in raw_data:
                 transformed_data["data"].append({
                     "id": item.get("id"),
+                    "rank": str(item.get("market_cap_rank", "")),
                     "symbol": item.get("symbol", "").upper(),
                     "name": item.get("name"),
                     "priceUsd": str(item.get("current_price", 0)),

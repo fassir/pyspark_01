@@ -1,116 +1,158 @@
 import sys
+import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
 
-# Configuration
-DB_HOST = "postgres" # Service name in Docker Compose
-DB_NAME = "cryptodb"
-DB_USER = "admin"
-DB_PASS = "password"
+# Configuration — env vars with safe defaults for local Docker Compose
+POSTGRES_URL = os.getenv("POSTGRES_URL", "jdbc:postgresql://postgres:5432/cryptodb")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "admin")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "password")
+GOLD_PATH = "/app/data/gold"
 
-GOLD_PATH = "/app/data/gold/top_assets"
+JDBC_PROPERTIES = {
+    "user": POSTGRES_USER,
+    "password": POSTGRES_PASSWORD,
+    "driver": "org.postgresql.Driver"
+}
+
+# (parquet_subpath, pg_table, col_renames_dict, write_mode)
+TABLES = [
+    (
+        "top_assets",
+        "crypto_top_assets",
+        {
+            "priceUsd": "price_usd",
+            "marketCapUsd": "market_cap_usd",
+            "volumeUsd24Hr": "volume_usd_24hr",
+            "changePercent24Hr": "change_percent_24hr",
+        },
+        "overwrite",
+    ),
+    (
+        "price_history",
+        "crypto_price_history",
+        {
+            "priceUsd": "price_usd",
+            "marketCapUsd": "market_cap_usd",
+            "volumeUsd24Hr": "volume_usd_24hr",
+        },
+        "overwrite",  # demo mode; change to "append" in production
+    ),
+    (
+        "volatility",
+        "crypto_volatility",
+        {},  # already snake_case: symbol, price_stddev, avg_price, price_range_pct, volatility_pct
+        "overwrite",
+    ),
+    (
+        "price_changes",
+        "crypto_price_changes",
+        {
+            "priceUsd": "price_usd",
+        },
+        "overwrite",
+    ),
+    (
+        "moving_averages",
+        "crypto_moving_averages",
+        {
+            "priceUsd": "price_usd",
+        },
+        "overwrite",
+    ),
+    (
+        "market_dominance",
+        "crypto_market_dominance",
+        {
+            "marketCapUsd": "market_cap_usd",
+        },
+        "overwrite",
+    ),
+    (
+        "liquidity",
+        "crypto_liquidity",
+        {
+            "volumeUsd24Hr": "volume_usd_24hr",
+            "marketCapUsd": "market_cap_usd",
+        },
+        "overwrite",
+    ),
+    (
+        "anomalies",
+        "crypto_anomalies",
+        {
+            "priceUsd": "price_usd",
+        },
+        "overwrite",
+    ),
+    (
+        "history_stats",
+        "crypto_history_stats",
+        {},  # already snake_case: symbol, avg_price, max_price, min_price
+        "overwrite",
+    ),
+]
+
+
+def load_table(spark, parquet_subpath, table_name, col_renames, mode):
+    parquet_path = f"{GOLD_PATH}/{parquet_subpath}"
+    try:
+        df = spark.read.parquet(parquet_path)
+
+        # Apply column renames (camelCase → snake_case)
+        for old_name, new_name in col_renames.items():
+            if old_name in df.columns:
+                df = df.withColumnRenamed(old_name, new_name)
+
+        row_count = df.count()
+
+        df.write \
+            .jdbc(
+                url=POSTGRES_URL,
+                table=table_name,
+                mode=mode,
+                properties=JDBC_PROPERTIES,
+            )
+
+        print(f"  OK  {table_name:<35} {row_count:>6} rows  [{mode}]")
+        return True
+
+    except Exception as e:
+        print(f"  FAIL {table_name:<34} — {e}")
+        return False
+
 
 def main():
-    print("Starting Load to Postgres (Spark JDBC)...")
-    
-    # Initialize Spark Session
-    # No need to hardcode jars if provided via spark-submit --jars
+    print("=" * 60)
+    print("Starting Load to Postgres (Spark JDBC) — 9 tables")
+    print(f"Target: {POSTGRES_URL}")
+    print("=" * 60)
+
     spark = SparkSession.builder \
         .appName("GoldToPostgres") \
         .getOrCreate()
-    
-    try:
-        print(f"Reading from: {GOLD_PATH}")
-        
-        # Read Gold Data (Parquet)
-        # Check if path exists logic is tricky with lazy evaluation, 
-        # but read will throw AnalysisException if missing.
-        try:
-            df = spark.read.parquet(GOLD_PATH)
-        except Exception as e:
-            print(f"WARNING: Gold Path could not be read. Ensure Gold job ran successfully. Error: {e}")
-            spark.stop()
-            return
 
-        row_count = df.count()
-        print(f"Loaded {row_count} rows from Gold Layer.")
-        
-        if row_count == 0:
-            print("Gold layer is empty. Nothing to load.")
-            spark.stop()
-            return
+    spark.sparkContext.setLogLevel("WARN")
 
-        # Rename columns to snake_case for Postgres/Grafana compatibility
-        jdbc_df = df.withColumnRenamed("priceUsd", "price_usd") \
-                    .withColumnRenamed("marketCapUsd", "market_cap_usd") \
-                    .withColumnRenamed("volumeUsd24Hr", "volume_usd_24hr") \
-                    .withColumnRenamed("changePercent24Hr", "change_percent_24hr")
-        
-        print("Schema optimized for Postgres:")
-        jdbc_df.printSchema()
-
-        # Debug: Check for diversity
-        distinct_syms = jdbc_df.select("symbol").distinct().collect()
-        sym_list = [r["symbol"] for r in distinct_syms]
-        print(f"DEBUG: Distinct Symbols in Dataframe: {sym_list}")
-
-        # JDBC Configuration
-        jdbc_url = f"jdbc:postgresql://{DB_HOST}:5432/{DB_NAME}"
-        properties = {
-            "user": DB_USER,
-            "password": DB_PASS,
-            "driver": "org.postgresql.Driver"
-        }
-        
-        # Explicit Truncate via Spark? 
-        # Spark JDBC 'truncate' option only works with Overwrite mode, but we suspect Overwrite is buggy here.
-        # Let's try 'overwrite' with 'truncate' option explicitly set to true.
-        # If that fails, we can't easily run raw SQL from Spark without a separate driver connection.
-        # Given we removed psycopg2 dependency... 
-        
-        # We will trust Spark but add the option.
-        print(f"Writing to JDBC: {jdbc_url} with Truncate")
-        
-        jdbc_df.write \
-            .option("truncate", "true") \
-            .jdbc(url=jdbc_url, table="crypto_top_assets", mode="overwrite", properties=properties)
-            
-        print("Data loaded to 'crypto_top_assets' successfully.")
-
-        # ---------------------------------------------------------
-        # Load History Data
-        # ---------------------------------------------------------
-        HISTORY_PATH = "/app/data/gold/price_history"
-        print(f"Reading History from: {HISTORY_PATH}")
-        try:
-            history_df = spark.read.parquet(HISTORY_PATH)
-            
-            # Rename for Postgres
-            pg_history_df = history_df.withColumnRenamed("priceUsd", "price_usd") \
-                                      .withColumnRenamed("volumeUsd24Hr", "volume_usd_24hr") \
-                                      .withColumnRenamed("marketCapUsd", "market_cap_usd")
-            
-            print("History Schema:")
-            pg_history_df.printSchema()
-            
-            # Write to crypto_price_history
-            # We use 'overwrite' here for simplicity in this demo (re-loading all history). 
-            # In prod, 'append' with deduplication or upsert is better.
-            print(f"Writing to JDBC table 'crypto_price_history'")
-            pg_history_df.write \
-                .jdbc(url=jdbc_url, table="crypto_price_history", mode="overwrite", properties=properties)
-            
-            print("Data loaded to 'crypto_price_history' successfully.")
-            
-        except Exception as h_e:
-            print(f"Warning: Could not load history data. {h_e}")
-
-    except Exception as e:
-        print(f"Error loading to Postgres: {e}")
-        # Exit with error code to alert orchestrator/docker
-        sys.exit(1)
+    results = {}
+    for parquet_subpath, table_name, col_renames, mode in TABLES:
+        success = load_table(spark, parquet_subpath, table_name, col_renames, mode)
+        results[table_name] = success
 
     spark.stop()
+
+    # Summary
+    total = len(results)
+    passed = sum(1 for ok in results.values() if ok)
+    failed_tables = [t for t, ok in results.items() if not ok]
+
+    print("=" * 60)
+    if passed == total:
+        print(f"SUCCESS: Loaded {passed}/{total} tables successfully.")
+    else:
+        print(f"WARNING: {passed}/{total} tables loaded. Failed: {failed_tables}")
+        sys.exit(1)
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

@@ -67,8 +67,8 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: cryptodb
-    ports:
-      - '5433:5432'
+    # ports:
+    #   - '5499:5432'  # descomente apenas para acesso externo (DBeaver/psql do host)
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:

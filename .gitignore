@@ -21,10 +21,26 @@ data/landing/*
 data/bronze/*
 data/silver/*
 data/gold/*
+data/serving/*
+data/jars/*
+data/quality_reports/*
 !data/landing/.gitkeep
 !data/bronze/.gitkeep
 !data/silver/.gitkeep
 !data/gold/.gitkeep
+CLAUDE.md
+
+# Spark / Parquet output files
+part-*.parquet
+part-*.csv
+*.part
+.part-*.crc
+_SUCCESS
+_committed_*
+_started_*
+
+# Hadoop / HDFS CRC checksum files
+*.crc
 
 # Docker / Infra
 infra/docker/logs/
